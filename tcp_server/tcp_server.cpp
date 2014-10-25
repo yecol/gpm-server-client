@@ -972,7 +972,7 @@ int tcp_server::check(char *query_fn, int mode) {
 		}*/
 
 		// ******** vf2 ******** 
-		vf2_subgraph_iso(qgraph, 
+		vf2_subgraph_mono(qgraph, 
 			dgraph, 
 			callback, 
 			get(vertex_index, qgraph),
