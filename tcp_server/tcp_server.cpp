@@ -410,18 +410,7 @@ int find_cand_in_g (int ql, char *qs, set<int> &cand, map<int, vector<int> > &g,
 					if (sigmatch((int *)qs, (int *)gs)) {
 						iscand = true;
 					}
-					//else no2 ++;
-					
-					/*printf("signature:\n");	
-					for (int i=0; i < BITMAPSIZE; i ++) {
-						printf("%2d. ", i);
-						printbyte(qs+i);
-						printf("\t");
-						printbyte(gs+i);
-						printf("\n");
-					}
-					char fse;
-					scanf("%c", &fse);*/
+
 				}
 			}
 			if (iscand) {
@@ -431,15 +420,6 @@ int find_cand_in_g (int ql, char *qs, set<int> &cand, map<int, vector<int> > &g,
 			}
 		//}
 	}
-
-	/*printf("signature:\n");	
-	for (int i=0; i < BITMAPSIZE; i ++) {
-		printf("%2d. ", i);
-		printbyte(qs+i);
-		printf("\n");
-	}
-	printf("same label(%d) count=%d, no1=%d, no2=%d\n", ql, count, no1, no2);*/
-	//printf("%d out of %d", cand.size(), count);
 	return cand.size();
 }
 
@@ -491,8 +471,6 @@ int find_cand_in_neighors (set<int> &fromcand, int ql, char *qs, set<int> &cand,
 		}
 	}
 
-	//printf("%d out of %d", cand.size(), count);
-	//printf(", no1=%d, no2=%d", no1, no2);
 	return cand.size();
 }
 
@@ -598,7 +576,7 @@ void make_gsmall_smaller (map<int, vector<int> > &gsmall, map<int, set<int> > &c
 		r_node_count ++;
 	}
 
-	printf("make_gsmall_smaller: remove %d nodes and %d edges from g_small.\n", r_node_count, r_edge_count);
+	// printf("make_gsmall_smaller: remove %d nodes and %d edges from g_small.\n", r_node_count, r_edge_count);
 }
 
 tcp_server::tcp_server(int listen_port) {
@@ -656,7 +634,6 @@ int tcp_server::recv_msg() {
 				
 				memset(buffer,0,MAXSIZE);
 				sprintf(buffer, "%d\n", count);
-				//printf("buff=%s\n", buffer);
 				send( accept_fd,buffer,strlen(buffer),0 );
                                 //break;
                         }
@@ -674,7 +651,6 @@ void tcp_server::init_graph_index(char *fn) {
 	int line_count = 0;
 	printf("\nload data graph...\n");
 	while (fgets(buffer, 50000, fr) != NULL) {
-		//printf("\n---------\n");
 		char *p = buffer;
 		p = trimwhitespace(p);
 		if(strlen(p) == 0) continue;
@@ -682,7 +658,6 @@ void tcp_server::init_graph_index(char *fn) {
 		if (line_count % 100000 == 0) {
 			printf("load data graph progress = %d\n", line_count);
 		}
-		//if (line_count > 100000) break;
 		line_count ++;
 	}
 	fclose(fr);
@@ -726,16 +701,8 @@ void tcp_server::init_graph_index(char *fn) {
 		if (line_count % 100000 == 0) {
 			printf("build inverted index progress = %d\n", line_count);
 		}
-		//printf("%d\n", line_count);
 		line_count ++;
 	}
-	// print inverted index
-	/*printf("-----------inverted index-----------\n");
-	map<int, vector<int> >::iterator itivi = inverted_index.begin();
-	map<int, vector<int> >::iterator itivi_end = inverted_index.end();
-	for (; itivi != itivi_end; itivi ++) {
-		printf("label=%d : %d\n", itivi->first, itivi->second.size());
-	}*/
 }
 
 void tcp_server::clean_up() {
@@ -797,14 +764,11 @@ int tcp_server::check(char *query_fn, int mode) {
 	for (; itq != itq_end; itq ++) {
 		int from = itq->first;
 		int from_label = qlabel[from];
-		//printf("%d(%d):", from, from_label);
 		vector<int>::iterator itv = itq->second.begin();
 		vector<int>::iterator itv_end = itq->second.end();
 		for (; itv != itv_end; itv ++) {
-			//printf("%d, ", *itv);
 			setsig(from, from_label, *itv, qlabel[*itv], base, lnum, qsigs);
 		}
-		//printf("\n");
 	}
 
 	// ******** reduce the data graph to a smaller one, according to the query and signature ********
@@ -817,11 +781,6 @@ int tcp_server::check(char *query_fn, int mode) {
 		printf("The query edges are not covered!\n");
 		return -1;
 	}
-	/*printf("topo-sort: ");
-	for (int i=0; i < qrank.size(); i ++) {
-		printf("%d, ", qrank[i]);
-	}
-	printf("\n");*/
 
 	map<int, set<int> > cand;
 	vector<int>::iterator itv = qrank.begin();
@@ -838,9 +797,7 @@ int tcp_server::check(char *query_fn, int mode) {
 		// 2. generate candidates for the roots	
 		if (roots.count(qid) > 0) {
 			set<int> ccand;
-			//printf("candidates for [qid=%d], size=", qid);
 			int ret = find_cand_in_g(ql, qs, ccand, g, label, sigs, inverted_index, gsmall);
-			//printf("\n");
 			if (ret == 0) {
 				has_answer = false;
 				break;
@@ -865,8 +822,6 @@ int tcp_server::check(char *query_fn, int mode) {
 			}
 		}
 
-		//printf("qid=%d\n", qid);
-
 		// 3. generate candidates for non-root nodes
 		vector<int>::iterator itc = q[qid].begin();
 		vector<int>::iterator itc_end = q[qid].end();
@@ -877,14 +832,10 @@ int tcp_server::check(char *query_fn, int mode) {
 			itqsig = qsigs.find(cid);
 			if (itqsig == itqsig_end) cs = NULL;
 			else cs = itqsig->second;
-	
-			//printf("q: %d --> %d\n", qid, cid);
+
 			set<int> ccand;
 
-			//printf("candidates for [cid=%d], size=", cid);
 			int ret = find_cand_in_neighors(cand[qid], cl, cs, ccand, g, label, sigs, gsmall);
-			//printf("\n");
-			//printf("ccand.size=%d\n", ret);
 			if (ret == 0) {
 				has_answer = false;
 				break;
@@ -916,18 +867,6 @@ int tcp_server::check(char *query_fn, int mode) {
 
 	if (has_answer) {
 		if (isDAG == 0) make_gsmall_smaller(gsmall, cand);
-		// print candidates
-		/*map<int, set<int> >::iterator itcand = cand.begin();
-		map<int, set<int> >::iterator itcand_end = cand.end();
-		for (; itcand != itcand_end; itcand ++) {
-			printf("[%d] candidates (%d): ", itcand->first, itcand->second.size());
-			set<int>::iterator itset = itcand->second.begin();
-			set<int>::iterator itset_end = itcand->second.end();
-			for (; itset != itset_end; itset ++) {
-				printf("%d, ", *itset);
-			}
-			printf("\n");
-		}*/
 		// ******** generate a small data graph based on gsmall ******** 
 		map<int, int > g_id_new2old;
 		map<int, int > q_id_new2old;
@@ -941,36 +880,6 @@ int tcp_server::check(char *query_fn, int mode) {
 
 		g_q_id_map = &q_id_new2old;
 		g_g_id_map = &g_id_new2old;
-
-		// print gsmall, namely dgraph here
-		/*printf("------G_small-----\n");
-		GraphTraits::out_edge_iterator out_i, out_end;
-		GraphTraits::edge_descriptor e;
-		pair<vertex_iter, vertex_iter> vp;
-		for (vp = vertices(dgraph); vp.first != vp.second; ++vp.first) {
-			Vertex v = *vp.first;
-			printf("[%d] <%d>: ", g_id_new2old[v], vcomp.graph2_label[v]);
-			for (boost::tie(out_i, out_end) = out_edges(v, dgraph); out_i != out_end; ++out_i) {
-				e = *out_i;
-				Vertex targ = target(e, dgraph);
-				printf("%d, ", g_id_new2old[targ]);
-			}
-			printf("\n");
-		}*/
-
-		// print query
-		/*printf("------Q-----\n");
-		for (vp = vertices(qgraph); vp.first != vp.second; ++vp.first) {
-			Vertex v = *vp.first;
-			printf("[%d] <%d>: ", q_id_new2old[v], vcomp.graph1_label[v]);
-			for (boost::tie(out_i, out_end) = out_edges(v, qgraph); out_i != out_end; ++out_i) {
-				e = *out_i;
-				Vertex targ = target(e, qgraph);
-				printf("%d, ", q_id_new2old[targ]);
-			}
-			printf("\n\n");
-		}*/
-
 		// ******** vf2 ******** 
 		vf2_subgraph_mono(qgraph, 
 			dgraph, 
@@ -993,24 +902,57 @@ int tcp_server::check(char *query_fn, int mode) {
 		printf("HAS NO ANSWER!\n");
 	}
 
-	// output result
+	// output all the result
+	// if (mode == 1) {
+	// 	char fw_fn[1000];
+	// 	sprintf(fw_fn, "%s.ret", query_fn);
+	// 	FILE *fw = fopen(fw_fn, "w");
+	// 	vector<vector<pair<int, int> > >::iterator itfw = gpm_result.begin();
+	// 	vector<vector<pair<int, int> > >::iterator itfw_end = gpm_result.end();
+	// 	int count = 1;
+	// 	for (; itfw != itfw_end; itfw ++) {
+	// 		fprintf(fw, "%d. ", count ++);
+	// 		vector<pair<int, int> >::iterator itpair = itfw->begin();
+	// 		vector<pair<int, int> >::iterator itpair_end = itfw->end();
+	// 		for (; itpair != itpair_end; itpair ++) {
+	// 			fprintf(fw, "(%d, %d) ", itpair->first, itpair->second);
+	// 		}
+	// 		fprintf(fw, "\n");
+	// 	}
+	// 	fprintf(fw, "\n");
+	// 	fclose(fw);
+	// }
+
+	// output only matches of x
 	if (mode == 1) {
 		char fw_fn[1000];
 		sprintf(fw_fn, "%s.ret", query_fn);
+		set<int> matches;
+
+		id_outputnode;
 		FILE *fw = fopen(fw_fn, "w");
+
+		// fprintf(fw, "output_node_id = %d\n", id_outputnode);
+
 		vector<vector<pair<int, int> > >::iterator itfw = gpm_result.begin();
 		vector<vector<pair<int, int> > >::iterator itfw_end = gpm_result.end();
 		int count = 1;
 		for (; itfw != itfw_end; itfw ++) {
-			fprintf(fw, "%d. ", count ++);
+			// fprintf(fw, "%d. ", count ++);
 			vector<pair<int, int> >::iterator itpair = itfw->begin();
 			vector<pair<int, int> >::iterator itpair_end = itfw->end();
 			for (; itpair != itpair_end; itpair ++) {
-				fprintf(fw, "(%d, %d) ", itpair->first, itpair->second);
+				if(itpair->first==id_outputnode){
+					// fprintf(fw, "second = %d\n", itpair->second);
+					matches.insert(itpair->second);
+					break;
+				}
 			}
-			fprintf(fw, "\n");
 		}
-		fprintf(fw, "\n");
+		for(set<int>::iterator it = matches.begin();it!=matches.end();it++){
+				fprintf(fw, "%d\n", *it);
+		}
+		// fprintf(fw, "\n");
 		fclose(fw);
 	}
 
